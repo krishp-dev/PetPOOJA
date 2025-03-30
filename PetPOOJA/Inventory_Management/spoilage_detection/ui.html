@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockVision AI | Real-Time Stock Detection</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <!-- AOS Animation Library -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-light: #6497fd;
+            --primary-dark: #3149ab;
+            --secondary: #f72585;
+            --success: #06d6a0;
+            --warning: #ffbe0b;
+            --danger: #ef233c;
+            --info: #4cc9f0;
+            --dark: #1a1a2e;
+            --dark-light: #232344;
+            --light: #f5f7ff;
+            --gray: #8d99ae;
+            --white: #ffffff;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 6px 6px rgba(0, 0, 0, 0.1);
+            --box-shadow-hover: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+            --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            --gradient-primary: linear-gradient(135deg, var(--primary), #7752fe);
+            --gradient-secondary: linear-gradient(135deg, var(--secondary), #ff4d97);
+            --gradient-success: linear-gradient(135deg, var(--success), #00b376);
+            --gradient-info: linear-gradient(135deg, var(--info), #00d2ff);
+            --gradient-dark: linear-gradient(135deg, var(--dark), var(--dark-light));
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8faff;
+            color: #2b2d42;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        .svg-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        
+        .bg-pattern {
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(var(--primary-light) 2px, transparent 2px),
+                radial-gradient(var(--secondary) 2px, transparent 2px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            opacity: 0.05;
+        }
+        
+        /* Main Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: 260px;
+            background: var(--gradient-dark);
+            color: var(--white);
+            height: 100vh;
+            position: fixed;
+            transition: var(--transition);
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: 5px 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar-minimized {
+            width: 80px;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            color: var(--white);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        
+        .logo-icon {
+            font-size: 1.8rem;
+            margin-right: 12px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .sidebar-minimized .logo-text {
+            display: none;
+        }
+        
+        .toggle-sidebar {
+            background: none;
+            border: none;
+            color: var(--white);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .toggle-sidebar:hover {
+            color: var(--primary-light);
+            transform: rotate(180deg);
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+        
+        .menu-header {
+            padding: 10px 20px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 10px;
+        }
+        
+        .sidebar-minimized .menu-header {
+            text-align: center;
+            padding: 10px 0;
+        }
+        
+        .nav-item {
+            margin: 5px 15px;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        
+        .sidebar-minimized .nav-item {
+            margin: 5px;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            position: relative;
+            transition: var(--transition);
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: var(--white);
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .sidebar-minimized .nav-link:hover, 
+        .sidebar-minimized .nav-link.active {
+            transform: translateX(0) scale(1.1);
+        }
+        
+        .nav-link.active {
+            background: var(--gradient-primary);
+            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.4);
+        }
+        
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+            margin-right: 15px;
+            transition: var(--transition);
+        }
+        
+        .sidebar-minimized .nav-text {
+            display: none;
+        }
+        
+        .sidebar-minimized .nav-link {
+            justify-content: center;
+            padding: 12px;
+        }
+        
+        .sidebar-minimized .nav-link i {
+            margin-right: 0;
+            font-size: 1.3rem;
+        }
+        
+        .nav-badge {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background-color: var(--danger);
+            color: var(--white);
+            font-size: 0.6rem;
+            font-weight: 600;
+            padding: 0.25rem 0.4rem;
+            border-radius: 10px;
+        }
+        
+        .sidebar-minimized .nav-badge {
+            top: 5px;
+            right: 5px;
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            transition: var(--transition);
+            padding: 20px;
+            padding-top: 80px;
+        }
+        
+        .main-content-expanded {
+            margin-left: 80px;
+        }
+        
+        /* Navbar Styles */
+        .top-navbar {
+            background: var(--white);
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 260px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 999;
+            transition: var(--transition);
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .navbar-expanded {
+            left: 80px;
+        }
+        
+        .navbar-search {
+            flex: 1;
+            margin-right: 20px;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px 15px 10px 40px;
+            border: none;
+            border-radius: 50px;
+            background-color: var(--light);
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+        
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+        
+        .navbar-right {
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-item {
+            margin-left: 15px;
+            position: relative;
+        }
+        
+        .navbar-link {
+            font-size: 1.2rem;
+            color: var(--dark);
+            background: none;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        
+        .navbar-link:hover {
+            background-color: var(--light);
+            color: var(--primary);
+            transform: scale(1.1);
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: var(--danger);
+            color: var(--white);
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            margin-left: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .user-profile:hover {
+            transform: translateY(-2px);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 10px;
+            border: 2px solid var(--primary-light);
+            transition: var(--transition);
+        }
+        
+        .user-profile:hover .user-avatar {
+            border-color: var(--secondary);
+        }
+        
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .user-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--gray);
+        }
+        
+        .dropdown-menu {
+            margin-top: 15px;
+            border: none;
+            border-radius: 15px;
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            min-width: 250px;
+            animation: fadeInDown 0.3s ease;
+        }
+        
+        .dropdown-header {
+            background: var(--gradient-primary);
+            color: var(--white);
+            padding: 15px;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .dropdown-item {
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+        
+        .dropdown-item i {
+            margin-right: 10px;
+            font-size: 1rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--light);
+            color: var(--primary);
+        }
+        
+        .notification-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+        }
+        
+        .notification-item:hover {
+            background-color: var(--light);
+        }
+        
+        .notification-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+        
+        .bg-danger-soft {
+            background-color: rgba(239, 35, 60, 0.1);
+            color: var(--danger);
+        }
+        
+        .bg-warning-soft {
+            background-color: rgba(255, 190, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .bg-info-soft {
+            background-color: rgba(76, 201, 240, 0.1);
+            color: var(--info);
+        }
+        
+        .bg-success-soft {
+            background-color: rgba(6, 214, 160, 0.1);
+            color: var(--success);
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .notification-text {
+            font-size: 0.75rem;
+            color: var(--gray);
+        }
+        
+        .notification-time {
+            font-size: 0.7rem;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+        
+        /* Card Styles */
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            background-color: var(--white);
+            transition: var(--transition);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            box-shadow: var(--box-shadow-hover);
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .card-header-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-header-title i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        /* Stats Card */
+        .stats-card {
+            height: 100%;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            z-index: -1;
+        }
+        
+        .stats-card::after {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.05);
+            z-index: -1;
+        }
+        
+        .stats-card-primary {
+            background: var(--gradient-primary);
+            color: var(--white);
+        }
+        
+        .stats-card-success {
+            background: var(--gradient-success);
+            color: var(--white);
+        }
+        
+        .stats-card-warning {
+            background: var(--gradient-secondary);
+            color: var(--white);
+        }
+        
+        .stats-card-info {
+            background: var(--gradient-info);
+            color: var(--white);
+        }
+        
+        .stats-icon {
+            font-size: 2.5rem;
+            opacity: 0.8;
+        }
+        
+        .stats-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 15px 0;
+        }
+        
+        .stats-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            opacity: 0.8;
+        }
+        
+        .stats-trend {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .stats-trend i {
+            margin-right: 5px;
+        }
+        
+        /* Camera Feed */
+        .camera-feed-container {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .camera-feed {
+            width: 100%;
+            display: block;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+        }
+        
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0) 50%);
+            pointer-events: none;
+        }
+        
+        .camera-status {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: var(--white);
+            padding: 5px 10px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .camera-status::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success);
+            margin-right: 8px;
+            animation: blink 2s infinite;
+        }
+        
+        @keyframes blink {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+        
+        .camera-controls {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .camera-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: var(--white);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .camera-btn:hover {
+            background-color: var(--primary);
+            transform: scale(1.1);
+        }
+        
+        .camera-selector {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 10;
+        }
+        
+        .camera-selector-btn {
+            background-color: rgba(0, 0, 0, 0.6);
+            color: var(--white);
+            border: none;
+            border-radius: 50px;
+            padding: 5px 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .camera-selector-btn i {
+            margin-right: 5px;
+        }
+        
+        .camera-selector-btn:hover {
+            background-color: var(--primary);
+        }
+        
+        .camera-options {
+            position: absolute;
+            top: 45px;
+            right: 0;
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: var(--box-shadow);
+            width: 200px;
+            overflow: hidden;
+            display: none;
+            z-index: 20;
+            animation: fadeInDown 0.3s ease;
+        }
+        
+        .camera-options.show {
+            display: block;
+        }
+        
+        .camera-option {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+        }
+        
+        .camera-option:hover {
+            background-color: var(--light);
+            color: var(--primary);
+        }
+        
+        .camera-option i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .camera-option.active {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+        
+        /* Detection Boxes */
+        .detection-box {
+            position: absolute;
+            border: 2px solid var(--primary);
+            border-radius: 5px;
+            z-index: 5;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(67, 97, 238, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(67, 97, 238, 0);
+            }
+        }
+        
+        .detection-label {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        /* Stock Level Bars */
+        .stock-item {
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .stock-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .stock-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .stock-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .stock-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-low {
+            background-color: var(--danger);
+        }
+        
+        .status-medium {
+            background-color: var(--warning);
+        }
+        
+        .status-good {
+            background-color: var(--success);
+        }
+        
+        .stock-value {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+        
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+            background-color: var(--light);
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            transition: width 1s ease-in-out;
+        }
+        
+        .progress-low {
+            background-color: var(--danger);
+        }
+        
+        .progress-medium {
+            background-color: var(--warning);
+        }
+        
+        .progress-good {
+            background-color: var(--success);
+        }
+        
+        /* Analytics Chart */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+        }
+        
+        /* Sensor Data */
+        .sensor-data {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .sensor-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.5rem;
+            transition: var(--transition);
+        }
+        
+        .sensor-data:hover .sensor-icon {
+            transform: scale(1.1);
+        }
+        
+        .icon-primary {
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+        }
+        
+        .icon-success {
+            background-color: rgba(6, 214, 160, 0.1);
+            color: var(--success);
+        }
+        
+        .sensor-info {
+            flex: 1;
+        }
+        
+        .sensor-label {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-bottom: 2px;
+        }
+        
+        .sensor-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .sensor-value-success {
+            background: var(--gradient-success);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* Modal Styles */
+        .modal-content {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            background: var(--gradient-primary);
+            color: var(--white);
+            border-bottom: none;
+            padding: 20px;
+        }
+        
+        .modal-title {
+            font-weight: 600;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            border-top: none;
+            padding: 20px;
+        }
+        
+        .btn {
+            border-radius: 50px;
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        
+        .btn-primary {
+            background: var(--gradient-primary);
+            border: none;
+            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #7752fe, var(--primary));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(67, 97, 238, 0.4);
+        }
+        
+        /* Floating Action Button */
+        .floating-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.4);
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 990;
+        }
+        
+        .floating-btn:hover {
+            transform: scale(1.1) rotate(45deg);
+        }
+        
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translate3d(0, -20px, 0);
+            }
+            to {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+            }
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 80px;
+            }
+            
+            .sidebar .logo-text, 
+            .sidebar .menu-header, 
+            .sidebar .nav-text {
+                display: none;
+            }
+            
+            .sidebar .nav-link {
+                justify-content: center;
+                padding: 12px;
+            }
+            
+            .sidebar .nav-link i {
+                margin-right: 0;
+                font-size: 1.3rem;
+            }
+            
+            .main-content {
+                margin-left: 80px;
+            }
+            
+            .top-navbar {
+                left: 80px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .user-info {
+                display: none;
+            }
+            
+            .navbar-search {
+                max-width: 200px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .top-navbar {
+                padding: 0 10px;
+            }
+            
+            .navbar-search {
+                display: none;
+            }
+            
+            .main-content {
+                padding: 10px;
+                padding-top: 80px;
+            }
+            
+            .floating-btn {
+                width: 50px;
+                height: 50px;
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="svg-background">
+        <div class="bg-pattern"></div>
+    </div>
+    
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="logo">
+                    <i class="fas fa-chart-line logo-icon"></i>
+                    <span class="logo-text">StockVision AI</span>
+                </a>
+                <button class="toggle-sidebar">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-menu">
+                <div class="menu-header">Main</div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link active">
+                        <i class="fas fa-home"></i>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-video"></i>
+                        <span class="nav-text">Camera Feeds</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-boxes"></i>
+                        <span class="nav-text">Inventory</span>
+                        <span class="nav-badge">3</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-chart-bar"></i>
+                        <span class="nav-text">Analytics</span>
+                    </a>
+                </div>
+                
+                <div class="menu-header">Settings</div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-cog"></i>
+                        <span class="nav-text">Settings</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-bell"></i>
+                        <span class="nav-text">Notifications</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-question-circle"></i>
+                        <span class="nav-text">Help</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Navbar -->
+            <div class="top-navbar">
+                <div class="navbar-search">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Search...">
+                </div>
+                
+                <div class="navbar-right">
+                    <div class="navbar-item">
+                        <button class="navbar-link">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge">3</span>
+                        </button>
+                    </div>
+                    <div class="navbar-item">
+                        <button class="navbar-link">
+                            <i class="fas fa-envelope"></i>
+                            <span class="notification-badge">5</span>
+                        </button>
+                    </div>
+                    <div class="user-profile dropdown">
+                        <div class="user-avatar">
+                            <img src="/api/placeholder/40/40" alt="User Avatar">
+                        </div>
+                        <div class="user-info">
+                            <div class="user-name">John Doe</div>
+                            <div class="user-role">Administrator</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dashboard Content -->
+            <div class="container-fluid">
+                <div class="row">
+                    <!-- Stats Cards -->
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <div class="card stats-card stats-card-primary h-100">
+                            <div class="card-body">
+                                <i class="fas fa-boxes stats-icon"></i>
+                                <div class="stats-number">127</div>
+                                <div class="stats-label">Total Items</div>
+                                <div class="stats-trend">
+                                    <i class="fas fa-arrow-up"></i> 12% from last week
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <div class="card stats-card stats-card-success h-100">
+                            <div class="card-body">
+                                <i class="fas fa-check-circle stats-icon"></i>
+                                <div class="stats-number">93%</div>
+                                <div class="stats-label">Accuracy Rate</div>
+                                <div class="stats-trend">
+                                    <i class="fas fa-arrow-up"></i> 5% from last week
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <div class="card stats-card stats-card-warning h-100">
+                            <div class="card-body">
+                                <i class="fas fa-exclamation-triangle stats-icon"></i>
+                                <div class="stats-number">8</div>
+                                <div class="stats-label">Low Stock Items</div>
+                                <div class="stats-trend">
+                                    <i class="fas fa-arrow-down"></i> 3 from last week
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <div class="card stats-card stats-card-info h-100">
+                            <div class="card-body">
+                                <i class="fas fa-clock stats-icon"></i>
+                                <div class="stats-number">24h</div>
+                                <div class="stats-label">Uptime</div>
+                                <div class="stats-trend">
+                                    <i class="fas fa-arrow-up"></i> 100% reliability
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Camera Feed -->
+                    <div class="col-lg-8 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-header-title">
+                                    <i class="fas fa-video"></i> Live Camera Feed
+                                </h5>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="camera-feed-container">
+                                    <img src="/api/placeholder/800/450" alt="Camera Feed" class="camera-feed">
+                                    <div class="camera-overlay"></div>
+                                    <div class="camera-status">Live Monitoring</div>
+                                    
+                                    <div class="camera-selector">
+                                        <button class="camera-selector-btn">
+                                            <i class="fas fa-video"></i> Warehouse A
+                                        </button>
+                                        <div class="camera-options">
+                                            <div class="camera-option active">
+                                                <i class="fas fa-video"></i> Warehouse A
+                                            </div>
+                                            <div class="camera-option">
+                                                <i class="fas fa-video"></i> Warehouse B
+                                            </div>
+                                            <div class="camera-option">
+                                                <i class="fas fa-video"></i> Storage Area
+                                            </div>
+                                            <div class="camera-option">
+                                                <i class="fas fa-video"></i> Loading Dock
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="camera-controls">
+                                        <button class="camera-btn">
+                                            <i class="fas fa-pause"></i>
+                                        </button>
+                                        <button class="camera-btn">
+                                            <i class="fas fa-expand"></i>
+                                        </button>
+                                        <button class="camera-btn">
+                                            <i class="fas fa-camera"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Detection Boxes (Example) -->
+                                    <div class="detection-box" style="top: 40%; left: 30%; width: 15%; height: 25%">
+                                        <div class="detection-label">Cereal Boxes (12)</div>
+                                    </div>
+                                    <div class="detection-box" style="top: 50%; left: 60%; width: 12%; height: 20%">
+                                        <div class="detection-label">Soda Cans (8)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Stock Levels -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="card-header-title">
+                                    <i class="fas fa-chart-pie"></i> Stock Levels
+                                </h5>
+                                <button class="btn btn-sm btn-primary">Refresh</button>
+                            </div>
+                            <div class="card-body">
+                                <div class="stock-item">
+                                    <div class="stock-info">
+                                        <div class="stock-name">
+                                            <div class="stock-status status-good"></div>
+                                            Cereal Boxes
+                                        </div>
+                                        <div class="stock-value">85%</div>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar progress-good" style="width: 85%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stock-item">
+                                    <div class="stock-info">
+                                        <div class="stock-name">
+                                            <div class="stock-status status-medium"></div>
+                                            Soda Cans
+                                        </div>
+                                        <div class="stock-value">45%</div>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar progress-medium" style="width: 45%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stock-item">
+                                    <div class="stock-info">
+                                        <div class="stock-name">
+                                            <div class="stock-status status-low"></div>
+                                            Paper Towels
+                                        </div>
+                                        <div class="stock-value">18%</div>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar progress-low" style="width: 18%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stock-item">
+                                    <div class="stock-info">
+                                        <div class="stock-name">
+                                            <div class="stock-status status-good"></div>
+                                            Water Bottles
+                                        </div>
+                                        <div class="stock-value">72%</div>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar progress-good" style="width: 72%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stock-item">
+                                    <div class="stock-info">
+                                        <div class="stock-name">
+                                            <div class="stock-status status-medium"></div>
+                                            Laundry Detergent
+                                        </div>
+                                        <div class="stock-value">40%</div>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar progress-medium" style="width: 40%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stock-item">
+                                    <div class="stock-info">
+                                        <div class="stock-name">
+                                            <div class="stock-status status-low"></div>
+                                            Coffee Packs
+                                        </div>
+                                        <div class="stock-value">15%</div>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar progress-low" style="width: 15%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Analytics Chart -->
+                    <div class="col-lg-8 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-header-title">
+                                    <i class="fas fa-chart-line"></i> Detection Analytics
+                                </h5>
+                                <div>
+                                    <button class="btn btn-sm btn-light me-2">Daily</button>
+                                    <button class="btn btn-sm btn-primary">Weekly</button>
+                                    <button class="btn btn-sm btn-light">Monthly</button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="analyticsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sensor Data -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="card-header-title">
+                                    <i class="fas fa-thermometer-half"></i> Environment
+                                </h5>
+                                <span class="text-muted small">Updated 5 min ago</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="sensor-data">
+                                    <div class="sensor-icon icon-primary">
+                                        <i class="fas fa-temperature-high"></i>
+                                    </div>
+                                    <div class="sensor-info">
+                                        <div class="sensor-label">Temperature</div>
+                                        <div class="sensor-value">24°C</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="sensor-data">
+                                    <div class="sensor-icon icon-success">
+                                        <i class="fas fa-tint"></i>
+                                    </div>
+                                    <div class="sensor-info">
+                                        <div class="sensor-label">Humidity</div>
+                                        <div class="sensor-value sensor-value-success">45%</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="sensor-data">
+                                    <div class="sensor-icon icon-primary">
+                                        <i class="fas fa-lightbulb"></i>
+                                    </div>
+                                    <div class="sensor-info">
+                                        <div class="sensor-label">Light Level</div>
+                                        <div class="sensor-value">820 lux</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="sensor-data">
+                                    <div class="sensor-icon icon-success">
+                                        <i class="fas fa-door-open"></i>
+                                    </div>
+                                    <div class="sensor-info">
+                                        <div class="sensor-label">Door Status</div>
+                                        <div class="sensor-value sensor-value-success">Closed</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Floating Action Button -->
+    <div class="floating-btn">
+        <i class="fas fa-plus"></i>
+    </div>
+    
+    <script>
+        // Initialize AOS Animations
+        AOS.init();
+        
+        // Toggle Sidebar
+        document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('sidebar-minimized');
+            document.querySelector('.main-content').classList.toggle('main-content-expanded');
+            document.querySelector('.top-navbar').classList.toggle('navbar-expanded');
+        });
+        
+        // Camera Selector
+        document.querySelector('.camera-selector-btn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.querySelector('.camera-options').classList.toggle('show');
+        });
+        
+        document.querySelectorAll('.camera-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.camera-option').forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelector('.camera-selector-btn').innerHTML = `<i class="fas fa-video"></i> ${this.textContent.trim()}`;
+                document.querySelector('.camera-options').classList.remove('show');
+            });
+        });
+        
+        document.addEventListener('click', function() {
+            document.querySelector('.camera-options').classList.remove('show');
+        });
+        
+        // Chart.js Implementation
+        const ctx = document.getElementById('analyticsChart').getContext('2d');
+        const analyticsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [
+                    {
+                        label: 'Cereal Boxes',
+                        data: [65, 59, 80, 81, 56, 55, 70],
+                        borderColor: '#4361ee',
+                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Soda Cans',
+                        data: [28, 48, 40, 19, 86, 27, 90],
+                        borderColor: '#f72585',
+                        backgroundColor: 'rgba(247, 37, 133, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Water Bottles',
+                        data: [45, 25, 40, 60, 30, 45, 55],
+                        borderColor: '#4cc9f0',
+                        backgroundColor: 'rgba(76, 201, 240, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 20,
+                            font: {
+                                family: "'Poppins', sans-serif",
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(26, 26, 46, 0.9)',
+                        padding: 12,
+                        titleFont: {
+                            family: "'Poppins', sans-serif",
+                            size: 14
+                        },
+                        bodyFont: {
+                            family: "'Poppins', sans-serif",
+                            size: 13
+                        },
+                        cornerRadius: 8,
+                        boxPadding: 6
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                family: "'Poppins', sans-serif",
+                                size: 12
+                            }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            font: {
+                                family: "'Poppins', sans-serif",
+                                size: 12
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                }
+            }
+        });
+        
+        // Simulating real-time updates
+        setInterval(() => {
+            // Update stock levels
+            document.querySelectorAll('.progress-bar').forEach(bar => {
+                let currentWidth = parseInt(bar.style.width);
+                let change = Math.floor(Math.random() * 10) - 5; // Random value between -5 and 5
+                let newWidth = Math.max(5, Math.min(100, currentWidth + change));
+                
+                bar.style.width = newWidth + '%';
+                bar.parentElement.previousElementSibling.querySelector('.stock-value').textContent = newWidth + '%';
+                
+                const statusElement = bar.parentElement.previousElementSibling.querySelector('.stock-status');
+                
+                if (newWidth < 20) {
+                    statusElement.className = 'stock-status status-low';
+                    bar.className = 'progress-bar progress-low';
+                } else if (newWidth < 50) {
+                    statusElement.className = 'stock-status status-medium';
+                    bar.className = 'progress-bar progress-medium';
+                } else {
+                    statusElement.className = 'stock-status status-good';
+                    bar.className = 'progress-bar progress-good';
+                }
+            });
+            
+            // Randomly update sensor values
+            const tempDisplay = document.querySelector('.sensor-data:nth-child(1) .sensor-value');
+            const currentTemp = parseInt(tempDisplay.textContent);
+            const tempChange = (Math.random() * 2 - 1).toFixed(1); // Random value between -1 and 1
+            tempDisplay.textContent = (currentTemp + parseFloat(tempChange)).toFixed(1) + '°C';
+            
+            const humidityDisplay = document.querySelector('.sensor-data:nth-child(2) .sensor-value');
+            const currentHumidity = parseInt(humidityDisplay.textContent);
+            const humidityChange = Math.floor(Math.random() * 3) - 1; // Random value between -1 and 1
+            humidityDisplay.textContent = Math.max(30, Math.min(70, currentHumidity + humidityChange)) + '%';
+            
+        }, 5000); // Every 5 seconds
+    </script>
+</body>
+</html>

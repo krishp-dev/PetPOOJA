@@ -1,0 +1,90 @@
+{
+    "spoilage_thresholds": {
+        "vegetable": {
+            "tomato": {
+                "shelf_life_days": 7,
+                "color_ranges": {
+                    "fresh": [[0, 100, 100], [10, 255, 255]],
+                    "warning": [[10, 100, 100], [20, 255, 255]],
+                    "spoiled": [[20, 50, 50], [30, 255, 255]]
+                },
+                "texture_threshold": 0.6
+            },
+            "lettuce": {
+                "shelf_life_days": 7,
+                "color_ranges": {
+                    "fresh": [[35, 50, 50], [85, 255, 255]],
+                    "warning": [[25, 50, 50], [35, 255, 255]],
+                    "spoiled": [[20, 50, 50], [30, 255, 255]]
+                },
+                "texture_threshold": 0.5
+            },
+            "carrot": {
+                "shelf_life_days": 14,
+                "color_ranges": {
+                    "fresh": [[10, 100, 100], [20, 255, 255]],
+                    "warning": [[20, 100, 100], [30, 255, 255]],
+                    "spoiled": [[30, 50, 50], [40, 255, 255]]
+                },
+                "texture_threshold": 0.7
+            },
+            "onion": {
+                "shelf_life_days": 30,
+                "color_ranges": {
+                    "fresh": [[0, 0, 200], [180, 30, 255]],
+                    "warning": [[0, 30, 100], [20, 150, 200]],
+                    "spoiled": [[0, 50, 50], [30, 255, 150]]
+                },
+                "texture_threshold": 0.6
+            },
+            "potato": {
+                "shelf_life_days": 30,
+                "color_ranges": {
+                    "fresh": [[0, 0, 200], [180, 30, 255]],
+                    "warning": [[0, 30, 100], [20, 150, 200]],
+                    "spoiled": [[0, 50, 50], [30, 255, 150]]
+                },
+                "texture_threshold": 0.7
+            },
+            "cucumber": {
+                "shelf_life_days": 7,
+                "color_ranges": {
+                    "fresh": [[35, 50, 50], [85, 255, 255]],
+                    "warning": [[25, 50, 50], [35, 255, 255]],
+                    "spoiled": [[20, 50, 50], [30, 255, 255]]
+                },
+                "texture_threshold": 0.6
+            },
+            "bell_pepper": {
+                "shelf_life_days": 7,
+                "color_ranges": {
+                    "fresh": [[35, 50, 50], [85, 255, 255]],
+                    "warning": [[25, 50, 50], [35, 255, 255]],
+                    "spoiled": [[20, 50, 50], [30, 255, 255]]
+                },
+                "texture_threshold": 0.6
+            },
+            "broccoli": {
+                "shelf_life_days": 7,
+                "color_ranges": {
+                    "fresh": [[35, 50, 50], [85, 255, 255]],
+                    "warning": [[25, 50, 50], [35, 255, 255]],
+                    "spoiled": [[20, 50, 50], [30, 255, 255]]
+                },
+                "texture_threshold": 0.5
+            }
+        }
+    },
+    "environmental_factors": {
+        "optimal_temperature": {
+            "fridge": [0.0, 4.0],
+            "freezer": [-18.0, -15.0],
+            "pantry": [15.0, 21.0]
+        },
+        "optimal_humidity": {
+            "fridge": [80, 90],
+            "freezer": [30, 50],
+            "pantry": [50, 60]
+        }
+    }
+} 

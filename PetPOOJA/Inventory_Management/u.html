@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Food Spoilage Detection Dashboard</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --dark: #1f2937;
+    }
+    
+    body {
+      background-color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .card {
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      transition: transform 0.3s;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .stat-card {
+      border-left: 4px solid;
+    }
+    
+    .sidebar {
+      background-color: var(--dark);
+      min-height: 100vh;
+    }
+    
+    .sidebar .nav-link {
+      color: #e2e8f0;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem;
+      border-radius: 8px;
+    }
+    
+    .sidebar .nav-link:hover, .sidebar .nav-link.active {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .sidebar .nav-link i {
+      width: 20px;
+    }
+    
+    .status-good {
+      color: var(--success);
+    }
+    
+    .status-warning {
+      color: var(--warning);
+    }
+    
+    .status-expired {
+      color: var(--danger);
+    }
+    
+    .food-item {
+      transition: background-color 0.2s;
+    }
+    
+    .food-item:hover {
+      background-color: #f1f5f9;
+    }
+    
+    .freshness-indicator {
+      height: 8px;
+      border-radius: 4px;
+    }
+    
+    .profile-pic {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <div class="col-md-2 sidebar p-3 d-none d-md-block">
+        <div class="d-flex align-items-center mb-4">
+          <i class="fas fa-leaf fa-2x me-2" style="color: var(--success);"></i>
+          <h4 class="mb-0 text-white">FreshTrack</h4>
+        </div>
+        <nav class="nav flex-column">
+          <a class="nav-link active" href="#"><i class="fas fa-home"></i> Dashboard</a>
+          <a class="nav-link" href="#"><i class="fas fa-hamburger"></i> Inventory</a>
+          <a class="nav-link" href="#"><i class="fas fa-chart-line"></i> Analytics</a>
+          <a class="nav-link" href="#"><i class="fas fa-bell"></i> Alerts</a>
+          <a class="nav-link" href="#"><i class="fas fa-camera"></i> Scan Food</a>
+          <a class="nav-link" href="#"><i class="fas fa-cog"></i> Settings</a>
+        </nav>
+      </div>
+      
+      <!-- Main Content -->
+      <div class="col-md-10 col-12 p-4">
+        <!-- Top Navigation -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2>Food Spoilage Dashboard</h2>
+          <div class="d-flex align-items-center">
+            <div class="position-relative me-4">
+              <i class="fas fa-bell fa-lg"></i>
+              <span class="badge bg-danger notification-badge">3</span>
+            </div>
+            <div class="profile-pic">JS</div>
+          </div>
+        </div>
+        
+        <!-- Stats Row -->
+        <div class="row mb-4">
+          <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card stat-card h-100" style="border-left-color: var(--success);">
+              <div class="card-body">
+                <h6 class="text-muted">Fresh Items</h6>
+                <div class="d-flex justify-content-between align-items-center">
+                  <h3>24</h3>
+                  <i class="fas fa-check-circle fa-2x status-good"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card stat-card h-100" style="border-left-color: var(--warning);">
+              <div class="card-body">
+                <h6 class="text-muted">Close to Expiry</h6>
+                <div class="d-flex justify-content-between align-items-center">
+                  <h3>8</h3>
+                  <i class="fas fa-exclamation-triangle fa-2x status-warning"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card stat-card h-100" style="border-left-color: var(--danger);">
+              <div class="card-body">
+                <h6 class="text-muted">Expired Items</h6>
+                <div class="d-flex justify-content-between align-items-center">
+                  <h3>2</h3>
+                  <i class="fas fa-times-circle fa-2x status-expired"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card stat-card h-100" style="border-left-color: var(--primary);">
+              <div class="card-body">
+                <h6 class="text-muted">Total Items</h6>
+                <div class="d-flex justify-content-between align-items-center">
+                  <h3>34</h3>
+                  <i class="fas fa-boxes fa-2x" style="color: var(--primary);"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Charts Row -->
+        <div class="row mb-4">
+          <div class="col-md-8 mb-3">
+            <div class="card h-100">
+              <div class="card-header bg-white">
+                <h5 class="mb-0">Freshness Trend</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="freshnessTrendChart" height="250"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card h-100">
+              <div class="card-header bg-white">
+                <h5 class="mb-0">Food Status By Category</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="foodCategoryChart" height="250"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Food Items Table -->
+        <div class="card mb-4">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Food Inventory</h5>
+            <div class="input-group" style="max-width: 300px;">
+              <input type="text" class="form-control" placeholder="Search items...">
+              <button class="btn btn-outline-secondary" type="button">
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Added Date</th>
+                    <th>Expiry Date</th>
+                    <th>Freshness</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="foodItemsTable">
+                  <!-- Table content will be populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="row">
+          <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card border-0 bg-primary text-white">
+              <div class="card-body d-flex align-items-center">
+                <i class="fas fa-camera fa-2x me-3"></i>
+                <div>
+                  <h5 class="mb-0">Scan New Item</h5>
+                  <small>Add to inventory</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card border-0 bg-success text-white">
+              <div class="card-body d-flex align-items-center">
+                <i class="fas fa-clipboard-list fa-2x me-3"></i>
+                <div>
+                  <h5 class="mb-0">Generate Report</h5>
+                  <small>Summary of items</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card border-0 bg-warning text-dark">
+              <div class="card-body d-flex align-items-center">
+                <i class="fas fa-bell fa-2x me-3"></i>
+                <div>
+                  <h5 class="mb-0">Set Alerts</h5>
+                  <small>Notification settings</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card border-0 bg-danger text-white">
+              <div class="card-body d-flex align-items-center">
+                <i class="fas fa-trash-alt fa-2x me-3"></i>
+                <div>
+                  <h5 class="mb-0">Clear Expired</h5>
+                  <small>Remove old items</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    // Sample data for the dashboard
+    const foodItems = [
+      { id: 1, name: 'Milk', category: 'Dairy', addedDate: '03/25/2025', expiryDate: '04/02/2025', freshness: 75, status: 'warning' },
+      { id: 2, name: 'Apples', category: 'Fruits', addedDate: '03/23/2025', expiryDate: '04/10/2025', freshness: 90, status: 'good' },
+      { id: 3, name: 'Chicken Breast', category: 'Meat', addedDate: '03/28/2025', expiryDate: '04/03/2025', freshness: 85, status: 'good' },
+      { id: 4, name: 'Yogurt', category: 'Dairy', addedDate: '03/20/2025', expiryDate: '04/05/2025', freshness: 80, status: 'good' },
+      { id: 5, name: 'Spinach', category: 'Vegetables', addedDate: '03/26/2025', expiryDate: '04/01/2025', freshness: 65, status: 'warning' },
+      { id: 6, name: 'Ground Beef', category: 'Meat', addedDate: '03/22/2025', expiryDate: '03/29/2025', freshness: 20, status: 'expired' },
+      { id: 7, name: 'Bread', category: 'Bakery', addedDate: '03/27/2025', expiryDate: '04/04/2025', freshness: 78, status: 'good' },
+      { id: 8, name: 'Cheese', category: 'Dairy', addedDate: '03/18/2025', expiryDate: '04/15/2025', freshness: 95, status: 'good' },
+      { id: 9, name: 'Leftover Pasta', category: 'Leftovers', addedDate: '03/28/2025', expiryDate: '03/31/2025', freshness: 45, status: 'warning' },
+      { id: 10, name: 'Avocado', category: 'Fruits', addedDate: '03/26/2025', expiryDate: '03/28/2025', freshness: 10, status: 'expired' }
+    ];
+
+    // Data for the Freshness Trend Chart
+    const trendLabels = ['7 days ago', '6 days ago', '5 days ago', '4 days ago', '3 days ago', '2 days ago', 'Today'];
+    const freshnessTrendData = [92, 90, 88, 89, 86, 84, 82];
+    
+    // Data for Food Category Chart
+    const categories = ['Fruits', 'Vegetables', 'Dairy', 'Meat', 'Bakery', 'Leftovers'];
+    const goodItems = [4, 3, 2, 1, 2, 0];
+    const warningItems = [1, 2, 1, 1, 0, 1];
+    const expiredItems = [1, 0, 0, 1, 0, 0];
+
+    // Initialize charts when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      // Populate the food items table
+      const tableBody = document.getElementById('foodItemsTable');
+      
+      foodItems.forEach(item => {
+        const row = document.createElement('tr');
+        row.className = 'food-item';
+        
+        let statusClass, statusIcon;
+        switch(item.status) {
+          case 'good':
+            statusClass = 'status-good';
+            statusIcon = 'fa-check-circle';
+            break;
+          case 'warning':
+            statusClass = 'status-warning';
+            statusIcon = 'fa-exclamation-triangle';
+            break;
+          case 'expired':
+            statusClass = 'status-expired';
+            statusIcon = 'fa-times-circle';
+            break;
+        }
+        
+        // Calculate freshness indicator color
+        let freshnessColor;
+        if (item.freshness >= 80) {
+          freshnessColor = 'var(--success)';
+        } else if (item.freshness >= 50) {
+          freshnessColor = 'var(--warning)';
+        } else {
+          freshnessColor = 'var(--danger)';
+        }
+        
+        row.innerHTML = `
+          <td>${item.name}</td>
+          <td>${item.category}</td>
+          <td>${item.addedDate}</td>
+          <td>${item.expiryDate}</td>
+          <td>
+            <div class="d-flex align-items-center">
+              <div class="freshness-indicator me-2" style="width: ${item.freshness}%; background-color: ${freshnessColor};"></div>
+              <span>${item.freshness}%</span>
+            </div>
+          </td>
+          <td><i class="fas ${statusIcon} ${statusClass}"></i> ${item.status.charAt(0).toUpperCase() + item.status.slice(1)}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-pencil-alt"></i></button>
+            <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+          </td>
+        `;
+        
+        tableBody.appendChild(row);
+      });
+      
+      // Initialize the Freshness Trend Chart
+      const trendCtx = document.getElementById('freshnessTrendChart').getContext('2d');
+      const freshnessTrendChart = new Chart(trendCtx, {
+        type: 'line',
+        data: {
+          labels: trendLabels,
+          datasets: [{
+            label: 'Average Freshness %',
+            data: freshnessTrendData,
+            fill: true,
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderColor: 'rgba(59, 130, 246, 1)',
+            tension: 0.4,
+            pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: false,
+              min: 60,
+              max: 100,
+              ticks: {
+                stepSize: 10
+              },
+              grid: {
+                drawBorder: false
+              }
+            },
+            x: {
+              grid: {
+                display: false,
+                drawBorder: false
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            }
+          }
+        }
+      });
+      
+      // Initialize the Food Category Chart
+      const categoryCtx = document.getElementById('foodCategoryChart').getContext('2d');
+      const foodCategoryChart = new Chart(categoryCtx, {
+        type: 'bar',
+        data: {
+          labels: categories,
+          datasets: [
+            {
+              label: 'Fresh',
+              data: goodItems,
+              backgroundColor: 'rgba(16, 185, 129, 0.8)',
+              borderColor: 'rgba(16, 185, 129, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Warning',
+              data: warningItems,
+              backgroundColor: 'rgba(245, 158, 11, 0.8)',
+              borderColor: 'rgba(245, 158, 11, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Expired',
+              data: expiredItems,
+              backgroundColor: 'rgba(239, 68, 68, 0.8)',
+              borderColor: 'rgba(239, 68, 68, 1)',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              grid: {
+                display: false,
+                drawBorder: false
+              }
+            },
+            y: {
+              beginAtZero: true,
+              grid: {
+                drawBorder: false
+              },
+              ticks: {
+                stepSize: 1,
+                precision: 0
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
